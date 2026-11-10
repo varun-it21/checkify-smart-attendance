@@ -1,0 +1,137 @@
+.student-dashboard {
+  padding: 25px;
+  background: #f5f7fa;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.dashboard-section {
+  background: #ffffff;
+  padding: 22px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* =========== ATTENDANCE CIRCLE ============ */
+.attendance-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.attendance-circle {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.attendance-circle svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.bg-circle {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 10;
+}
+
+.progress-circle {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 314;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.attendance-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ================= HOLIDAYS ================ */
+.holiday-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.holiday-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.holiday-name {
+  font-weight: 600;
+}
+
+/* =============== LEAVE TABLE ================= */
+.table-container {
+  overflow-x: auto;
+}
+
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leave-table th {
+  text-align: left;
+  padding: 10px;
+  background: #eef2f7;
+}
+
+.leave-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.status {
+  font-weight: 600;
+}
+
+.status.approved {
+  color: green;
+}
+
+.status.pending {
+  color: orange;
+}
+
+.status.rejected {
+  color: red;
+}
+
+.no-data {
+  text-align: center;
+  padding: 15px;
+  color: #777;
+}
+
+.top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+/* leave table section should be full width */
+.leave-table-section {
+  grid-column: span 2;
+}

@@ -1,0 +1,58 @@
+# ==============================
+# Checkify - Root Git Ignore
+# ==============================
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/secrets.json
+**/secrets.*.json
+
+# .NET build output
+**/bin/
+**/obj/
+**/*.user
+**/*.suo
+**/*.cache
+
+# Node / React / Vite
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/pnpm-debug.log*
+
+# IDE and editor files
+.idea/
+.vscode/
+*.code-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Test results
+TestResults/
+**/TestResults/
+*.trx
+
+# Local databases and backups
+*.db
+*.db-shm
+*.db-wal
+*.bak
+*.dump
+
+# Root-level release archives
+/*.zip
+
