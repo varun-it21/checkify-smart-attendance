@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Layout from "../components/Layout";
 import api from "../api/api";
 import { QRCodeSVG } from "qrcode.react";
@@ -82,7 +82,6 @@ export default function GenerateOTP() {
 
   // Live Records
   const [records, setRecords] = useState([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Session Closing State
@@ -90,7 +89,6 @@ export default function GenerateOTP() {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ text: "", type: "" });
 
-  const qrAutoRotateRef = useRef(null);
 
   // -------------------------------------------------------------
   // 1. Fetch active session for the authenticated staff
@@ -694,6 +692,18 @@ export default function GenerateOTP() {
                             level="M"
                             includeMargin={true}
                           />
+                        </div>
+
+                        {/* Fallback for students without a camera: copy the token text */}
+                        <div className="flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(qrToken)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>{copiedOtp ? "Copied!" : "Copy QR token"}</span>
+                          </button>
                         </div>
 
                         {/* 60s Countdown Bar & Indicator */}

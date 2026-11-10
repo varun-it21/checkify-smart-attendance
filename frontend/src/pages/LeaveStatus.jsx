@@ -141,7 +141,12 @@ const LeaveStatus = () => {
                       <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={l.reason}>
                         {l.reason}
                       </td>
-                      <td className="py-3 px-4">{getStatusBadge(l.status)}</td>
+                      <td className="py-3 px-4">
+                        {getStatusBadge(l.status)}
+                        {(l.status || "").toUpperCase() === "PENDING" && l.approverRole && (
+                          <div className="mt-1 text-xs text-gray-500">Waiting for {l.approverRole}</div>
+                        )}
+                      </td>
                       <td className="py-3 px-4 text-gray-500 italic max-w-xs truncate" title={l.reviewerRemarks || ""}>
                         {l.reviewerRemarks || "-"}
                       </td>

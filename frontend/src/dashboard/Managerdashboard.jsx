@@ -3,7 +3,8 @@ import { Activity, Building2, CalendarCheck, GraduationCap, RefreshCw, Users } f
 import { ResponsiveContainer, CartesianGrid, LineChart, Line, Tooltip, XAxis, YAxis } from "recharts";
 import api from "../api/api";
 import "../CSS/DashboardAnalytics.css";
-import { DashboardError, DashboardLoading, EmptyAnalytics, SectionCard, StatCard, formatPercent } from "./DashboardShared";
+import { DashboardError, DashboardLoading, EmptyAnalytics, SectionCard, StatCard } from "./DashboardShared";
+import { formatPercent } from "./dashboardUtils";
 
 const ManagerDashboard = () => {
   const [stats, setStats] = useState(null);

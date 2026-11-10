@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // No valid frontend session
   if (!session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Check permitted roles

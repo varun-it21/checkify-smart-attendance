@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Activity, CalendarCheck, GraduationCap, RefreshCw, Users } from "lucide-react";
 import api from "../api/api";
 import "../CSS/DashboardAnalytics.css";
-import { DashboardError, DashboardLoading, EmptyAnalytics, SectionCard, StatCard, formatPercent } from "./DashboardShared";
+import { DashboardError, DashboardLoading, EmptyAnalytics, SectionCard, StatCard } from "./DashboardShared";
+import { formatPercent } from "./dashboardUtils";
 
 const HODDashboard = () => {
   const [stats, setStats] = useState(null);

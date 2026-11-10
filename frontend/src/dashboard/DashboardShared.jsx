@@ -1,7 +1,6 @@
 import React from "react";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 
-export const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
 
 export function DashboardLoading({ message = "Loading live analytics…" }) {
   return <div className="analytics-state"><LoaderCircle className="analytics-spin" size={20} />{message}</div>;

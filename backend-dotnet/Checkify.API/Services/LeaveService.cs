@@ -39,6 +39,12 @@ public class LeaveService : ILeaveService
         if (string.IsNullOrWhiteSpace(request.Reason))
             throw new ArgumentException("Reason is required.");
 
+        // Allow one day of slack for client time zones ahead of UTC. Medical leave may be back-dated.
+        var earliestAllowed = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var requestedType = string.IsNullOrWhiteSpace(request.LeaveType) ? "CASUAL" : request.LeaveType.Trim().ToUpperInvariant();
+        if (request.StartDate < earliestAllowed && requestedType != "MEDICAL")
+            throw new ArgumentException("Start date cannot be in the past (only medical leave can be back-dated).");
+
         var leaveType = string.IsNullOrWhiteSpace(request.LeaveType)
             ? "CASUAL"
             : request.LeaveType.Trim().ToUpperInvariant();
@@ -78,6 +84,29 @@ public class LeaveService : ILeaveService
             departmentId = defaultDept?.Id ?? 1;
         }
 
+        if (applicantRole == "ADMIN")
+            throw new InvalidOperationException("Administrators do not apply for leave through this system.");
+
+        // Decide the reviewer role from the fixed approval chain.
+        string approverRole;
+        if (applicantRole == "STUDENT" || applicantRole == "STAFF")
+        {
+            var departmentHasHod = await _db.Staff
+                .AsNoTracking()
+                .AnyAsync(s => s.DepartmentId == departmentId
+                    && s.UserId != currentUserId
+                    && s.Position.ToUpper() == "HOD", cancellationToken);
+            approverRole = departmentHasHod ? "HOD" : "MANAGER";
+        }
+        else if (applicantRole == "HOD")
+        {
+            approverRole = "MANAGER";
+        }
+        else
+        {
+            approverRole = "ADMIN"; // MANAGER
+        }
+
         // 2. Overlap validation
         var hasOverlap = await _db.LeaveRequests
             .AsNoTracking()
@@ -98,6 +127,7 @@ public class LeaveService : ILeaveService
             UserId = currentUserId,
             DepartmentId = departmentId,
             ApplicantRole = applicantRole,
+            ApproverRole = approverRole,
             LeaveType = leaveType,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
@@ -110,46 +140,38 @@ public class LeaveService : ILeaveService
         _db.LeaveRequests.Add(leave);
         await _db.SaveChangesAsync(cancellationToken);
 
-        // 4. Send notification to designated reviewer
+        // 4. Send notification to designated reviewer(s)
         try
         {
-            if (applicantRole == "STUDENT" || applicantRole == "STAFF")
+            List<int> reviewerIds;
+            if (approverRole == "HOD")
             {
-                var hodUserId = await _db.Staff
+                reviewerIds = await _db.Staff
                     .AsNoTracking()
-                    .Where(s => s.DepartmentId == departmentId && s.Position.ToUpper() == "HOD")
+                    .Where(s => s.DepartmentId == departmentId && s.Position.ToUpper() == "HOD" && s.UserId != currentUserId)
                     .Select(s => s.UserId)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                if (hodUserId > 0)
-                {
-                    await _notificationService.CreateNotificationAsync(
-                        hodUserId,
-                        "New Leave Request",
-                        $"{applicantRole} {user.Name} applied for {leaveType} leave ({request.StartDate:yyyy-MM-dd} to {request.EndDate:yyyy-MM-dd}).",
-                        "LEAVE_SUBMITTED",
-                        leave.Id,
-                        cancellationToken);
-                }
+                    .ToListAsync(cancellationToken);
             }
-            else if (applicantRole == "HOD")
+            else
             {
-                var managerIds = await _db.Users
+                // MANAGER reviews are also visible to Admins (override); ADMIN reviews go to Admins only.
+                reviewerIds = await _db.Users
                     .AsNoTracking()
-                    .Where(u => u.Role == "MANAGER" || u.Role == "ADMIN")
+                    .Where(u => u.Id != currentUserId
+                        && (u.Role == "ADMIN" || (approverRole == "MANAGER" && u.Role == "MANAGER")))
                     .Select(u => u.Id)
                     .ToListAsync(cancellationToken);
+            }
 
-                if (managerIds.Count > 0)
-                {
-                    await _notificationService.CreateNotificationsForUsersAsync(
-                        managerIds,
-                        "New Leave Request",
-                        $"HOD {user.Name} applied for {leaveType} leave ({request.StartDate:yyyy-MM-dd} to {request.EndDate:yyyy-MM-dd}).",
-                        "LEAVE_SUBMITTED",
-                        leave.Id,
-                        cancellationToken);
-                }
+            if (reviewerIds.Count > 0)
+            {
+                await _notificationService.CreateNotificationsForUsersAsync(
+                    reviewerIds,
+                    "New Leave Request",
+                    $"{applicantRole} {user.Name} applied for {leaveType} leave ({request.StartDate:yyyy-MM-dd} to {request.EndDate:yyyy-MM-dd}).",
+                    "LEAVE_SUBMITTED",
+                    leave.Id,
+                    cancellationToken);
             }
         }
         catch (Exception ex)
@@ -285,11 +307,21 @@ public class LeaveService : ILeaveService
             if (staff == null)
                 throw new UnauthorizedAccessException("HOD profile not found.");
 
-            baseQuery = baseQuery.Where(l => l.DepartmentId == staff.DepartmentId && l.Status == "PENDING" && l.ApplicantRole != "HOD");
+            baseQuery = baseQuery.Where(l => l.DepartmentId == staff.DepartmentId
+                && l.Status == "PENDING"
+                && l.ApproverRole == "HOD"
+                && l.UserId != reviewerUserId);
         }
-        else if (roleNorm == "MANAGER" || roleNorm == "ADMIN")
+        else if (roleNorm == "MANAGER")
         {
-            baseQuery = baseQuery.Where(l => l.Status == "PENDING");
+            baseQuery = baseQuery.Where(l => l.Status == "PENDING"
+                && l.ApproverRole == "MANAGER"
+                && l.UserId != reviewerUserId);
+        }
+        else if (roleNorm == "ADMIN")
+        {
+            // Admin override: sees every pending request except their own.
+            baseQuery = baseQuery.Where(l => l.Status == "PENDING" && l.UserId != reviewerUserId);
         }
         else
         {
@@ -351,6 +383,11 @@ public class LeaveService : ILeaveService
             throw new InvalidOperationException($"Leave request has already been {leave.Status.ToLowerInvariant()}.");
         }
 
+        if (leave.UserId == reviewerUserId)
+        {
+            throw new UnauthorizedAccessException("You cannot review your own leave request.");
+        }
+
         var roleNorm = reviewerRole.Trim().ToUpperInvariant();
         if (roleNorm == "HOD")
         {
@@ -360,12 +397,19 @@ public class LeaveService : ILeaveService
                 throw new UnauthorizedAccessException("HOD can only review leave requests from their own department.");
             }
 
-            if (leave.ApplicantRole.Equals("HOD", StringComparison.OrdinalIgnoreCase))
+            if (!leave.ApproverRole.Equals("HOD", StringComparison.OrdinalIgnoreCase))
             {
-                throw new UnauthorizedAccessException("HOD cannot review leave requests submitted by an HOD. Escalation to Manager or Admin is required.");
+                throw new UnauthorizedAccessException("This leave request must be reviewed by a " + leave.ApproverRole + ".");
             }
         }
-        else if (roleNorm != "MANAGER" && roleNorm != "ADMIN")
+        else if (roleNorm == "MANAGER")
+        {
+            if (!leave.ApproverRole.Equals("MANAGER", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("This leave request must be reviewed by a " + leave.ApproverRole + ".");
+            }
+        }
+        else if (roleNorm != "ADMIN")
         {
             throw new UnauthorizedAccessException("Only HOD, Manager, or Admin can review leave requests.");
         }
@@ -485,6 +529,7 @@ public class LeaveService : ILeaveService
             ApplicantName = applicantName ?? l.User?.Name ?? string.Empty,
             ApplicantEmail = applicantEmail ?? l.User?.Email ?? string.Empty,
             ApplicantRole = l.ApplicantRole,
+            ApproverRole = l.ApproverRole,
             DepartmentId = l.DepartmentId,
             DepartmentName = departmentName ?? l.Department?.Name ?? string.Empty,
             LeaveType = l.LeaveType,

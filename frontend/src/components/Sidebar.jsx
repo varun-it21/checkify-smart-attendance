@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { NavLink } from "react-router-dom";
 import {
-  ArrowRight,
+  PanelLeftClose,
+  PanelLeftOpen,
   X,
   Users,
   PlusCircle,
@@ -21,116 +22,148 @@ import {
   FileText,
 } from "lucide-react";
 
-function Sidebar() {
-  const [open, setOpen] = useState(true);
-  const navigate = useNavigate();
+const ICON_SIZE = 22;
+
+const DASHBOARD_PATHS = {
+  MANAGER: "/manager/dashboard",
+  HOD: "/hod/dashboard",
+  STAFF: "/staff/dashboard",
+  STUDENT: "/student/dashboard",
+  ADMIN: "/admin/dashboard",
+};
+
+const MENU_ITEMS = {
+  ADMIN: [
+    { icon: Shield, label: "User Management", path: "/admin/users" },
+    { icon: Settings, label: "System Settings", path: "/admin/settings" },
+    { icon: FileText, label: "Audit Logs", path: "/admin/audit-logs" },
+    { icon: Users, label: "Add Student", path: "/admin/add-students" },
+    { icon: PlusCircle, label: "Add Staff", path: "/admin/add-staffs" },
+    { icon: Edit, label: "Edit Student", path: "/admin/edit-students" },
+    { icon: NotebookPen, label: "Edit Staff", path: "/admin/edit-staffs" },
+    { icon: ClipboardList, label: "Approve Leaves", path: "/admin/leave-approve" },
+    { icon: BarChart2, label: "Reports & Analytics", path: "/admin/reports" },
+    { icon: AlertTriangle, label: "Defaulters List", path: "/admin/defaulters" },
+    { icon: TrendingUp, label: "Attendance Trends", path: "/admin/trends" },
+  ],
+  MANAGER: [
+    { icon: Users, label: "Add Student", path: "/manager/add-students" },
+    { icon: PlusCircle, label: "Add Staff", path: "/manager/add-staffs" },
+    { icon: Edit, label: "Edit Student", path: "/manager/edit-students" },
+    { icon: NotebookPen, label: "Edit Staff", path: "/manager/edit-staffs" },
+    { icon: ClipboardList, label: "Approve Leaves", path: "/manager/leave-approve" },
+    { icon: Calendar, label: "Apply Leave", path: "/manager/apply-leave" },
+    { icon: FileText, label: "My Leave Status", path: "/manager/leave-status" },
+    { icon: BarChart2, label: "Reports & Analytics", path: "/manager/reports" },
+    { icon: AlertTriangle, label: "Defaulters List", path: "/manager/defaulters" },
+    { icon: TrendingUp, label: "Attendance Trends", path: "/manager/trends" },
+  ],
+  HOD: [
+    { icon: Users, label: "Assign Staff to Class", path: "/hod/assign-staff" },
+    { icon: ClipboardList, label: "Approve Leave", path: "/hod/leave-approve" },
+    { icon: Calendar, label: "Apply Leave", path: "/hod/apply-leave" },
+    { icon: FileText, label: "My Leave Status", path: "/hod/leave-status" },
+    { icon: BarChart2, label: "Department Reports", path: "/hod/reports" },
+    { icon: AlertTriangle, label: "Defaulters List", path: "/hod/defaulters" },
+    { icon: TrendingUp, label: "Attendance Trends", path: "/hod/trends" },
+  ],
+  STAFF: [
+    { icon: Calendar, label: "Apply Leave to HOD", path: "/staff/apply-leave" },
+    { icon: FileText, label: "My Leave Status", path: "/staff/leave-status" },
+    { icon: QrCode, label: "Generate OTP", path: "/staff/generate-otp" },
+    { icon: BarChart2, label: "View Attendance", path: "/staff/view-attendance" },
+  ],
+  STUDENT: [
+    { icon: Calendar, label: "Apply Leave", path: "/student/leave-apply" },
+    { icon: FileText, label: "My Leave Status", path: "/student/leave-status" },
+    { icon: QrCode, label: "Mark Attendance", path: "/student/mark-attendance" },
+    { icon: BarChart2, label: "View Attendance", path: "/student/view-attendance" },
+    { icon: Table2, label: "View Time Table", path: "/student/view-timetable" },
+  ],
+};
+
+function Sidebar({ isOpen = true, isDesktop = true, onToggle, onNavigate }) {
   const role = localStorage.getItem("role");
+  const dashboardPath = DASHBOARD_PATHS[role] || "/dashboard";
+  const items = MENU_ITEMS[role] || [];
 
-  const dashboardPath = {
-    MANAGER: "/manager/dashboard",
-    HOD: "/hod/dashboard",
-    STAFF: "/staff/dashboard",
-    STUDENT: "/student/dashboard",
-    ADMIN: "/admin/dashboard"
-  }[role];
+  // Desktop collapses to an icon rail; mobile is an off-canvas drawer.
+  const showLabels = isOpen || !isDesktop;
 
-  const menuItems = {
-    ADMIN: [
-      { icon: <Shield size={26} />, label: "User Management", path: "/admin/users" },
-      { icon: <Settings size={26} />, label: "System Settings", path: "/admin/settings" },
-      { icon: <FileText size={26} />, label: "Audit Logs", path: "/admin/audit-logs" },
-      { icon: <Users size={26} />, label: "Add Student", path: "/admin/add-students" },
-      { icon: <PlusCircle size={26} />, label: "Add Staff", path: "/admin/add-staffs" },
-      { icon: <Edit size={26} />, label: "Edit Student", path: "/admin/edit-students" },
-      { icon: <NotebookPen size={26} />, label: "Edit Staff", path: "/admin/edit-staffs" },
-      { icon: <ClipboardList size={26} />, label: "Approve Leaves", path: "/admin/leave-approve" },
-      { icon: <BarChart2 size={26} />, label: "Reports & Analytics", path: "/admin/reports" },
-      { icon: <AlertTriangle size={26} />, label: "Defaulters List", path: "/admin/defaulters" },
-      { icon: <TrendingUp size={26} />, label: "Attendance Trends", path: "/admin/trends" }
-    ],
-    MANAGER: [
-      { icon: <Users size={30} />, label: "Add Student", path: "/manager/add-students" },
-      { icon: <PlusCircle size={30} />, label: "Add Staff", path: "/manager/add-staffs" },
-      { icon: <Edit size={30} />, label: "Edit Student", path: "/manager/edit-students" },
-      { icon: <NotebookPen size={30} />, label: "Edit Staff", path: "/manager/edit-staffs" },
-      { icon: <Calendar size={30} />, label: "Apply Leave", path: "/manager/apply-leave" },
-      { icon: <BarChart2 size={30} />, label: "Reports & Analytics", path: "/manager/reports" },
-      { icon: <AlertTriangle size={30} />, label: "Defaulters List", path: "/manager/defaulters" },
-      { icon: <TrendingUp size={30} />, label: "Attendance Trends", path: "/manager/trends" }
-    ],
-    HOD: [
-      { icon: <Users size={30} />, label: "Assign Staff to Class", path: "/hod/assign-staff" },
-      { icon: <ClipboardList size={30} />, label: "Approve Staff Leave", path: "/hod/leave-approve" },
-      { icon: <Calendar size={30} />, label: "Apply Leave", path: "/hod/apply-leave" },
-      { icon: <BarChart2 size={30} />, label: "Department Reports", path: "/hod/reports" },
-      { icon: <AlertTriangle size={30} />, label: "Defaulters List", path: "/hod/defaulters" },
-      { icon: <TrendingUp size={30} />, label: "Attendance Trends", path: "/hod/trends" }
-    ],
-    STAFF: [
-      { icon: <UserCheck size={30} />, label: "Approve Student Leave", path: "/staff/approve-leave" },
-      { icon: <Calendar size={30} />, label: "Apply Leave to HOD", path: "/staff/apply-leave" },
-      { icon: <QrCode size={30} />, label: "Generate OTP", path: "/staff/generate-otp" },
-      { icon: <BarChart2 size={30} />, label: "View Attendance", path: "/staff/view-attendance" }
-    ],
-    STUDENT : [
-      { icon: <Calendar size={30} />, label: "Apply Leave", path: "/student/leave-apply" },
-      { icon: <QrCode size={30} />, label: "Mark Attendance", path: "/student/mark-attendance" },
-      { icon: <BarChart2 size={30} />, label: "View Attendance", path: "/student/view-attendance" },
-      { icon: <Table2 size={30} />, label: "View Time Table", path: "/student/view-timetable" }
-    ]
-  };
+  // Close the mobile drawer with Escape.
+  useEffect(() => {
+    if (isDesktop || !isOpen) return undefined;
+    const onKey = (e) => e.key === "Escape" && onToggle?.();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isDesktop, isOpen, onToggle]);
 
-  const items = menuItems[role] || [];
+  const linkClass = ({ isActive }) =>
+    [
+      "flex items-center gap-3 rounded-xl p-3 text-sm font-medium transition-colors",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+      showLabels ? "" : "justify-center",
+      isActive ? "bg-white/20 text-white" : "text-blue-50 hover:bg-white/10",
+    ].join(" ");
+
+  const renderLink = (to, Icon, label, end = false) => (
+    <NavLink
+      key={to}
+      to={to}
+      end={end}
+      onClick={onNavigate}
+      className={linkClass}
+      title={showLabels ? undefined : label}
+      aria-label={label}
+    >
+      <Icon size={ICON_SIZE} className="shrink-0" aria-hidden="true" />
+      {showLabels && <span className="truncate">{label}</span>}
+    </NavLink>
+  );
+
+  const drawerHidden = !isDesktop && !isOpen;
 
   return (
     <>
-      <style>
-        {`
-          .sidebar-icon {
-            display: flex;
-            justify-content: center;
-          }
+      {/* Backdrop for the mobile drawer */}
+      {!isDesktop && isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40"
+          onClick={onToggle}
+          aria-hidden="true"
+        />
+      )}
 
-          .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-          }
-        `}
-      </style>
-
-      <div className="flex h-screen bg-gray-100">
-        <div className={`bg-blue-700 text-white p-6 pt-10 ${open ? "w-64" : "w-20"}`}>
-          <button onClick={() => setOpen(!open)} className="absolute top-6 left-4 text-white">
-            {open ? <X size={40} /> : <ArrowRight size={40} />}
-          </button>
-
-          <br /><br /><br /><br />
-
-          {/* Dashboard Button */}
+      <aside
+        aria-label="Main navigation"
+        aria-hidden={drawerHidden || undefined}
+        inert={drawerHidden}
+        className={[
+          "bg-blue-700 text-white flex flex-col shrink-0 transition-all duration-300",
+          isDesktop
+            ? `relative h-screen ${isOpen ? "w-64" : "w-20"}`
+            : `fixed inset-y-0 left-0 z-40 w-64 max-w-[85vw] ${
+                isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+              }`,
+        ].join(" ")}
+      >
+        <div className={`flex items-center h-14 px-4 shrink-0 ${showLabels ? "justify-between" : "justify-center"}`}>
+          {showLabels && <span className="text-lg font-bold tracking-wide">Checkify</span>}
           <button
-            onClick={() => navigate(dashboardPath)}
-            className="flex items-center w-full hover:bg-blue-600 p-3 rounded-xl gap-3 mb-5"
+            type="button"
+            onClick={onToggle}
+            className="p-1.5 rounded-lg hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            aria-label={isDesktop ? (isOpen ? "Collapse sidebar" : "Expand sidebar") : "Close menu"}
           >
-            <div className="sidebar-icon"><Home size={30} /></div>
-            {open && <span className="font-semibold">Dashboard</span>}
+            {!isDesktop ? <X size={22} /> : isOpen ? <PanelLeftClose size={22} /> : <PanelLeftOpen size={22} />}
           </button>
-
-          {/* Menu Items */}
-          <nav className="sidebar-menu mt-5 font-medium">
-            {items.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => navigate(item.path)}
-                className="flex items-center hover:bg-blue-600 p-3 rounded-xl gap-3 mb-4"
-              >
-                <div className="sidebar-icon">{item.icon}</div>
-                {open && <span>{item.label}</span>}
-              </button>
-            ))}
-          </nav>
         </div>
-      </div>
+
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-6 flex flex-col gap-1.5">
+          {renderLink(dashboardPath, Home, "Dashboard", true)}
+          {items.map((item) => renderLink(item.path, item.icon, item.label))}
+        </nav>
+      </aside>
     </>
   );
 }

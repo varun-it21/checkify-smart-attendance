@@ -24,6 +24,14 @@ public class LeaveRequest
     [Column("applicant_role")]
     public string ApplicantRole { get; set; } = "STUDENT"; // STUDENT, STAFF, HOD
 
+    // Role that must review this request, decided server-side when it is created:
+    // STUDENT/STAFF -> HOD (MANAGER if the department has no HOD), HOD -> MANAGER, MANAGER -> ADMIN.
+    // ADMIN can always review any request as an override.
+    [Required]
+    [MaxLength(20)]
+    [Column("approver_role")]
+    public string ApproverRole { get; set; } = "HOD";
+
     [Required]
     [MaxLength(20)]
     [Column("leave_type")]

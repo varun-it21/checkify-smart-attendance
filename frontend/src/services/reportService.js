@@ -39,7 +39,7 @@ export const reportService = {
   // 8. Fetch departments for dropdowns
   getDepartments: async () => {
     try {
-      const res = await api.get("/department/get-departments");
+      const res = await api.get("/manager/departments");
       return res.data || [];
     } catch {
       return [];

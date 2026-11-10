@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getAuthSession, getDashboardPath } from "./utils/auth";
@@ -62,14 +62,27 @@ const AuthenticatedRoute = ({ children }) => (
 );
 
 function App() {
+  // Re-read the session on every navigation so login/logout are reflected immediately.
+  useLocation();
   const session = getAuthSession();
 
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        {/* Login */}
+        {/* Entry point: send visitors to their dashboard or the login page */}
         <Route
           path="/"
+          element={
+            <Navigate
+              to={session ? getDashboardPath(session.role) : "/login"}
+              replace
+            />
+          }
+        />
+
+        {/* Login */}
+        <Route
+          path="/login"
           element={
             session
               ? <Navigate to={getDashboardPath(session.role)} replace />
@@ -107,6 +120,7 @@ function App() {
         <Route path="/manager/add-staffs" element={<RoleRoute roles={["MANAGER"]}><AddStaff /></RoleRoute>} />
         <Route path="/manager/edit-students" element={<RoleRoute roles={["MANAGER"]}><EditStudent /></RoleRoute>} />
         <Route path="/manager/edit-staffs" element={<RoleRoute roles={["MANAGER"]}><EditStaff /></RoleRoute>} />
+        <Route path="/manager/leave-approve" element={<RoleRoute roles={["MANAGER"]}><LeaveApprove /></RoleRoute>} />
         <Route path="/manager/apply-leave" element={<RoleRoute roles={["MANAGER"]}><ManagerLeaveApply /></RoleRoute>} />
         <Route path="/manager/leave-status" element={<RoleRoute roles={["MANAGER"]}><LeaveStatus /></RoleRoute>} />
         <Route path="/manager/reports" element={<RoleRoute roles={["MANAGER", "ADMIN"]}><ReportsDashboard /></RoleRoute>} />
@@ -124,7 +138,6 @@ function App() {
 
         {/* Staff */}
         <Route path="/staff/apply-leave" element={<RoleRoute roles={["STAFF"]}><StaffLeaveApply /></RoleRoute>} />
-        <Route path="/staff/approve-leave" element={<RoleRoute roles={["STAFF"]}><LeaveApprove /></RoleRoute>} />
         <Route path="/staff/leave-status" element={<RoleRoute roles={["STAFF"]}><LeaveStatus /></RoleRoute>} />
         <Route path="/staff/generate-otp" element={<RoleRoute roles={["STAFF"]}><GenerateOTP /></RoleRoute>} />
         <Route path="/staff/view-attendance" element={<RoleRoute roles={["STAFF"]}><StaffViewAttendance /></RoleRoute>} />

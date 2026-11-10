@@ -7,6 +7,7 @@ public class LeaveResponse
     public string ApplicantName { get; set; } = string.Empty;
     public string ApplicantEmail { get; set; } = string.Empty;
     public string ApplicantRole { get; set; } = string.Empty;
+    public string ApproverRole { get; set; } = string.Empty;
     public int DepartmentId { get; set; }
     public string DepartmentName { get; set; } = string.Empty;
     public string LeaveType { get; set; } = string.Empty;

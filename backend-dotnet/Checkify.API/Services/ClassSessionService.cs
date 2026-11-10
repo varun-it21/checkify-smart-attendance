@@ -265,6 +265,18 @@ public class ClassSessionService : IClassSessionService
 
         EnsureDepartmentAccess(actor, classSession.DepartmentId);
 
+        // Attendance history references the class; the database restricts deleting it.
+        var attendanceSessionCount = await _context.AttendanceSessions
+            .CountAsync(s => s.ClassSessionId == classSession.Id, cancellationToken);
+
+        if (attendanceSessionCount > 0)
+        {
+            throw new InvalidOperationException(
+                $"This class cannot be deleted because {attendanceSessionCount} attendance session(s) " +
+                "have already been recorded for it. Attendance history must be preserved. " +
+                "Edit the class instead (for example change the day or faculty).");
+        }
+
         _context.ClassSessions.Remove(classSession);
 
         await _context.SaveChangesAsync(cancellationToken);

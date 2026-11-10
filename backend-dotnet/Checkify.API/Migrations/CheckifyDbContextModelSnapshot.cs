@@ -379,6 +379,12 @@ namespace Checkify.API.Migrations
                         .HasColumnType("varchar(20)")
                         .HasColumnName("applicant_role");
 
+                    b.Property<string>("ApproverRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("approver_role");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");

@@ -53,6 +53,7 @@ const INITIAL_FORM = {
 function getErrorMessage(error, fallback) {
   const data = error.response?.data;
   if (data?.message) return data.message;
+  if (data?.errors) return Object.values(data.errors).flat().join(" ");
   if (data?.title) return data.title;
   if (data?.errors) {
     return Object.values(data.errors).flat().join(" ");
@@ -82,7 +83,6 @@ function formatTimeForInput(timeStr) {
 }
 
 function HodAssignStaff() {
-  const userRole = localStorage.getItem("role") || "";
 
   // Data states
   const [sessions, setSessions] = useState([]);
@@ -136,12 +136,20 @@ function HodAssignStaff() {
     loadData();
   }, []);
 
+  // The staff API returns departmentName (not departmentId), so match by id when present, else by name.
+  const staffInDepartment = (staff, deptId) => {
+    if (staff.departmentId != null) return staff.departmentId === deptId;
+    const dept = departments.find((d) => d.id === deptId);
+    return !!dept && staff.departmentName === dept.name;
+  };
+
   // Filter staff by selected department
   const availableStaff = useMemo(() => {
     if (!formData.departmentId) return staffList;
     const deptId = Number(formData.departmentId);
-    return staffList.filter((s) => s.departmentId === deptId);
-  }, [formData.departmentId, staffList]);
+    return staffList.filter((s) => staffInDepartment(s, deptId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.departmentId, staffList, departments]);
 
   // Open Create Modal
   const handleOpenCreate = () => {
@@ -193,7 +201,7 @@ function HodAssignStaff() {
       if (name === "departmentId") {
         const deptId = Number(value);
         const staffStillValid = staffList.some(
-          (s) => s.id === Number(prev.staffId) && s.departmentId === deptId
+          (s) => s.id === Number(prev.staffId) && staffInDepartment(s, deptId)
         );
         if (!staffStillValid) {
           updated.staffId = "";

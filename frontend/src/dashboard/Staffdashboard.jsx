@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Activity, BookOpen, CalendarCheck, QrCode, RefreshCw, ShieldCheck } from "lucide-react";
 import api from "../api/api";
 import "../CSS/DashboardAnalytics.css";
-import { DashboardError, DashboardLoading, EmptyAnalytics, SectionCard, StatCard, formatPercent } from "./DashboardShared";
+import { DashboardError, DashboardLoading, EmptyAnalytics, SectionCard, StatCard } from "./DashboardShared";
+import { formatPercent } from "./dashboardUtils";
 
 const StaffDashboard = () => {
   const [insights, setInsights] = useState(null);

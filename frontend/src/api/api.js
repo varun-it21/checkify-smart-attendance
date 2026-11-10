@@ -32,7 +32,7 @@ api.interceptors.response.use(
       localStorage.removeItem("role");
       localStorage.removeItem("expiresAt");
 
-      window.location.assign("/");
+      window.location.assign("/login");
     }
 
     return Promise.reject(error);

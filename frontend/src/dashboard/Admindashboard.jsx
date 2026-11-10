@@ -86,7 +86,7 @@ export default function Admindashboard() {
   }, []);
 
   return (
-    <div className="admin-dashboard p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="admin-dashboard space-y-6" aria-busy={loading}>
       {/* Institutional Banner */}
       <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

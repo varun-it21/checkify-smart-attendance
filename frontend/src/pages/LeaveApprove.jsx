@@ -95,7 +95,7 @@ const LeaveApprove = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {loading ? (
             <div className="p-8 text-center text-gray-500">Loading pending leave requests...</div>
-          ) : leaves.length === 0 ? (
+          ) : error ? null : leaves.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <svg
                 className="w-12 h-12 text-gray-300 mx-auto mb-3"

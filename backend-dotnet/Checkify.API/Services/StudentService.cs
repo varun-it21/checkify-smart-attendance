@@ -330,6 +330,14 @@ public class StudentService : IStudentService
 
             await transaction.CommitAsync(cancellationToken);
         }
+        catch (DbUpdateException)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw new InvalidOperationException(
+                "This student cannot be deleted because they already have history in the system " +
+                "(sign-ins, leave requests or attendance records) that must be preserved. " +
+                "Deactivate the account instead (Admin > User Management).");
+        }
         catch
         {
             await transaction.RollbackAsync(cancellationToken);

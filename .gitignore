@@ -56,3 +56,4 @@ TestResults/
 # Root-level release archives
 /*.zip
 
+**/.vs/

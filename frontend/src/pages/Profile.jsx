@@ -1,181 +1,98 @@
-import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import React, { useMemo } from "react";
+import { ShieldCheck, Mail, User, KeyRound } from "lucide-react";
+import Layout from "../components/Layout";
+
+const ROLE_LABELS = {
+  ADMIN: "Administrator",
+  MANAGER: "Manager",
+  HOD: "Head of Department",
+  STAFF: "Staff",
+  STUDENT: "Student",
+};
+
+// Read non-sensitive display claims from the session JWT (no verification needed for display).
+const readClaims = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return {};
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(decodeURIComponent(escape(atob(payload))));
+  } catch {
+    return {};
+  }
+};
+
+const pick = (claims, ...keys) => {
+  for (const key of keys) {
+    if (claims[key]) return String(claims[key]);
+  }
+  return "";
+};
 
 const Profile = () => {
-  const USE_MOCK_DATA = true; // Set false when backend is ready
-  const role = localStorage.getItem("role") || "student";
-  const userId = localStorage.getItem("userId") || "123";
+  const role = (localStorage.getItem("role") || "").toUpperCase();
+  const claims = useMemo(() => readClaims(), []);
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const email = pick(
+    claims,
+    "email",
+    "unique_name",
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+  );
+  const name = pick(claims, "name", "given_name") || email.split("@")[0] || "My Account";
+  const roleLabel = ROLE_LABELS[role] || "Unknown role";
 
-  useEffect(() => {
-    if (USE_MOCK_DATA) {
-      const mockData = {
-        student: {
-          firstName: "Varun",
-          lastName: "Varun",
-          email: "varun@example.com",
-          rollNumber: "23",
-          department: "Science",
-          role: "Student",
-        },
-        staff: {
-          firstName: "John",
-          lastName: "Doe",
-          email: "john@example.com",
-          staffId: "S123",
-          department: "CS",
-          role: "Staff",
-        },
-        hod: {
-          firstName: "Jane",
-          lastName: "Smith",
-          email: "jane@example.com",
-          staffId: "HOD01",
-          department: "Physics",
-          role: "HOD",
-        },
-        manager: {
-          firstName: "Alice",
-          lastName: "Johnson",
-          email: "alice@example.com",
-          staffId: "M001",
-          department: "Admin",
-          role: "Manager",
-        },
-        admin: {
-          firstName: "Super",
-          lastName: "Admin",
-          email: "admin@example.com",
-          role: "Admin",
-        },
-      };
-      setTimeout(() => {
-        setProfile(mockData[role]);
-        setLoading(false);
-      }, 500);
-    } else {
-      // fetch profile from backend
-    }
-  }, [role, userId]);
-
-  if (loading) return <p>Loading profile…</p>;
-  if (!profile) return <p>Profile not found</p>;
+  const details = [
+    { icon: User, label: "Name", value: name },
+    { icon: Mail, label: "Email", value: email || "Not available" },
+    { icon: ShieldCheck, label: "Role", value: roleLabel },
+  ];
 
   return (
-    <div className="dashboard-layout flex">
-      <Sidebar role={role} />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <Navbar />
-
-        <div className="p-6 overflow-auto flex-1 bg-gray-50">
-  {/* Header */}
-  <div style={{ display: "flex", alignItems: "center", marginBottom: "30px", gap: "20px" }}>
-    <div style={{
-      width: "80px",
-      height: "80px",
-      borderRadius: "50%",
-      background: "linear-gradient(135deg, #4f46e5, #3b82f6)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "28px",
-      color: "#fff",
-      fontWeight: "700",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
-    }}>
-      {profile.firstName[0]}
-    </div>
-    <div>
-      <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "5px", color: "#111827" }}>
-        {profile.firstName} {profile.lastName}
-      </h1>
-      <p style={{
-        color: "#6b7280",
-        fontWeight: "500",
-        background: "#e0e7ff",
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "6px",
-        fontSize: "14px"
-      }}>
-        {profile.role}
-      </p>
-    </div>
-  </div>
-
-  {/* Personal Information Card */}
-  <div style={{
-    background: "#fff",
-    borderRadius: "12px",
-    padding: "25px",
-    marginBottom: "25px",
-    boxShadow: "0 2px 12px rgba(0,0,0,0.08)"
-  }}>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
-      {Object.entries(profile).map(([key, value]) => {
-        if (!value) return null;
-        const title = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        return (
-          <div key={key}>
-            <p style={{ fontWeight: "500", color: "#6b7280", marginBottom: "5px", textTransform: "capitalize" }}>{title}</p>
-            <p style={{ color: "#111827", fontWeight: "500" }}>{value}</p>
+    <Layout>
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex items-center gap-4">
+          <div
+            className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-full bg-gradient-to-br from-indigo-600 to-blue-500 text-white flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-md"
+            aria-hidden="true"
+          >
+            {name.charAt(0).toUpperCase()}
           </div>
-        );
-      })}
-    </div>
-  </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{name}</h1>
+            <span className="inline-block mt-1 rounded-md bg-indigo-100 px-2 py-0.5 text-sm font-medium text-indigo-700">
+              {roleLabel}
+            </span>
+          </div>
+        </div>
 
-  {/* Change Password Card */}
-  <div style={{
-    background: "#fff",
-    borderRadius: "12px",
-    padding: "25px",
-    boxShadow: "0 2px 12px rgba(0,0,0,0.08)"
-  }}>
-    <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "20px", color: "#111827" }}>Change Password</h2>
-    <div style={{ display: "flex", flexDirection: "column", gap: "15px", maxWidth: "400px" }}>
-      <input
-        type="password"
-        placeholder="Current Password"
-        style={{
-          padding: "12px",
-          borderRadius: "8px",
-          border: "1px solid #d1d5db",
-          outline: "none",
-          fontSize: "14px"
-        }}
-      />
-      <input
-        type="password"
-        placeholder="New Password"
-        style={{
-          padding: "12px",
-          borderRadius: "8px",
-          border: "1px solid #d1d5db",
-          outline: "none",
-          fontSize: "14px"
-        }}
-      />
-      <button style={{
-        padding: "12px 20px",
-        background: "#4f46e5",
-        color: "#fff",
-        border: "none",
-        borderRadius: "8px",
-        cursor: "pointer",
-        fontWeight: "500",
-        fontSize: "14px",
-        width: "fit-content"
-      }}>Update Password</button>
-    </div>
-  </div>
-</div>
+        <section className="bg-white rounded-xl border shadow-sm p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Account details</h2>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {details.map((item) => (
+              <div key={item.label} className="flex items-start gap-3 min-w-0">
+                <item.icon className="w-5 h-5 mt-0.5 text-gray-400 shrink-0" aria-hidden="true" />
+                <div className="min-w-0">
+                  <dt className="text-sm text-gray-500">{item.label}</dt>
+                  <dd className="font-medium text-gray-900 break-words">{item.value}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
+        </section>
 
+        <section className="bg-white rounded-xl border shadow-sm p-5 sm:p-6 flex items-start gap-3">
+          <KeyRound className="w-5 h-5 mt-0.5 text-gray-400 shrink-0" aria-hidden="true" />
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Password</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Passwords are managed by an administrator. Contact your institution administrator to reset yours.
+            </p>
+          </div>
+        </section>
       </div>
-    </div>
+    </Layout>
   );
 };
 

@@ -29,6 +29,9 @@ const Leave = ({ role }) => {
     }
   }, [role]);
 
+  const today = new Date().toISOString().slice(0, 10);
+  const minDate = form.leaveType === "MEDICAL" ? undefined : today;
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -69,6 +72,7 @@ const Leave = ({ role }) => {
     } catch (err) {
       const msg =
         err.response?.data?.message ||
+        (err.response?.data?.errors && Object.values(err.response.data.errors).flat().join(" ")) ||
         err.response?.data?.title ||
         "Failed to submit leave request. Please check your dates and try again.";
       setStatusMessage({ type: "error", text: msg });
@@ -235,6 +239,7 @@ const Leave = ({ role }) => {
                   <input
                     type="date"
                     name="from"
+                    min={minDate}
                     value={form.from}
                     onChange={handleChange}
                     required
@@ -246,6 +251,7 @@ const Leave = ({ role }) => {
                   <input
                     type="date"
                     name="to"
+                    min={form.from || minDate}
                     value={form.to}
                     onChange={handleChange}
                     required

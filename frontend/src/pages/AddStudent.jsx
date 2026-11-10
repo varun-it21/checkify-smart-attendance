@@ -23,6 +23,7 @@ function getErrorMessage(error, fallback) {
   const data = error.response?.data;
 
   if (data?.message) return data.message;
+  if (data?.errors) return Object.values(data.errors).flat().join(" ");
   if (data?.title) return data.title;
 
   // ASP.NET Core validation response
